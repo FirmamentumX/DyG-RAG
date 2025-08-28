@@ -141,7 +141,6 @@ class Evaluator:
         # Filter successful queries
         successful_results = [r for r in results if r.get('status') == 'success']
         
-        # 计算 query_time 平均值（只统计成功的）
         avg_query_time = 0
         if successful_results:
             total_query_time = sum(r.get('query_time', 0) for r in successful_results)
@@ -161,18 +160,19 @@ class Evaluator:
         # Perform evaluation
         res_dict, evaluated_df = self.short_eval(df)
         
-        # 加入 avg_query_time 到评估结果
         res_dict['avg_query_time'] = avg_query_time
         
         # Save evaluation results
-        # output_eval_file = results_file.replace('.json', '_eval.json')
-        output_eval_file = './ComplexTR/results_mode-naive_topk-20_eval.json'
+        output_eval_file = results_file.replace('.json', '_eval.json')
         
-        # Merge metadata and evaluation results
+        # Merge metadata and evaluation results - only save ACC and F1
         eval_data = {
             "metadata": data.get('metadata', {}),
-            "eval_metrics": res_dict,
-            "per_question_metrics": evaluated_df[['question_id', 'question', 'output', 'answer', 'accuracy', 'f1', 'precision', 'recall', 'em']].to_dict('records')
+            "eval_metrics": {
+                "accuracy": res_dict["accuracy"],
+                "f1": res_dict["f1"]
+            },
+            "per_question_metrics": evaluated_df[['question_id', 'question', 'output', 'answer', 'accuracy', 'f1']].to_dict('records')
         }
         
         # Save evaluation results
@@ -289,7 +289,7 @@ class Evaluator:
         df["recall"] = recall_list
         df["em"] = em_list
 
-        # Create result dictionary
+        # Create result dictionary - keep all metrics for internal use
         res_dict = {
             "accuracy": accuracy,
             "f1": f1,
@@ -297,14 +297,6 @@ class Evaluator:
             "recall": recall,
             "em": em,
         }
-
-        # Print results
-        logger.info("Evaluation results:")
-        logger.info(f"Accuracy: {accuracy:.4f}")
-        logger.info(f"Precision: {pre:.4f}")
-        logger.info(f"Recall: {recall:.4f}")
-        logger.info(f"F1 score: {f1:.4f}")
-        logger.info(f"Exact Match (EM): {em:.4f}")
 
         return res_dict, df
 
@@ -317,23 +309,16 @@ def run_evaluation(results_file):
     Returns:
         dict: Evaluation metrics
     """
-    # Create evaluator
     evaluator = Evaluator()
     
-    # Check if file exists
     if not Path(results_file).exists():
         logger.error(f"Results file {results_file} does not exist!")
         return None
     
     logger.info(f"Starting evaluation of results file: {results_file}")
     
-    # Perform evaluation
     metrics, _ = evaluator.eval_results(results_file)
     
-    # Print summary
-    logger.info(f"Evaluation completed! Overall F1: {metrics['f1']:.2f}, Exact Match: {metrics['em']:.2f}")
-    
-    # Return evaluation metrics
     return metrics
 
 # Direct call example
@@ -350,5 +335,6 @@ if __name__ == "__main__":
     
     if evaluation_results:
         print("Evaluation metrics:")
-        for metric, value in evaluation_results.items():
-            print(f"{metric}: {value:.4f}") 
+        # Only print ACC and F1
+        print(f"accuracy: {evaluation_results['accuracy']:.4f}")
+        print(f"f1: {evaluation_results['f1']:.4f}") 
