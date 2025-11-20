@@ -6,6 +6,18 @@ Reference:
 GRAPH_FIELD_SEP = "<SEP>"
 PROMPTS = {}
 
+PROMPTS["dynamic_QA_raw_context"] = """
+# EVENTS
+{events_data}
+
+# TEXT CHUNKS
+{chunks_data}
+"""
+PROMPTS["dynamic_QA_wo_timeline_raw_context"] = """
+# TEXT CHUNKS
+{chunks_data}
+"""
+
 PROMPTS["dynamic_QA"] = """
 
 You are an AI assistant that answers questions based on both temporal event sequences and relevant text chunks.

@@ -817,6 +817,19 @@ class GraphRAG:
                     chunks_section += f"## Chunk {i+1}\n{chunk_content}\n\n"
             else:
                 chunks_section = "No relevant chunks found."
+            # Implement for only_need_context    
+            if param.only_need_context:
+                if self.if_timeline_events:
+                    context = PROMPTS["dynamic_QA_raw_context"].format(
+                        events_data=events_section,
+                        chunks_data=chunks_section
+                    )
+                    logger.debug("Using dynamic_QA_raw_context prompt template with events and chunks")
+                else:
+                    context = PROMPTS["dynamic_QA_wo_timeline_raw_context"].format(
+                        chunks_data=chunks_section
+                    )
+                
             if self.if_timeline_events:
                 context = PROMPTS["dynamic_QA"].format(
                     question=question,
@@ -847,9 +860,13 @@ class GraphRAG:
                 content_data=events_section, 
                 response_type=param.response_type
             )
-        
-        response = await self.best_model_func(context)
-        return response
+            
+        # Implement for only_need_context
+        if param.only_need_context:
+            return context
+        else:
+            response = await self.best_model_func(context)
+            return response
 
     async def ainsert(self, string_or_strings):
         await self._insert_start()
