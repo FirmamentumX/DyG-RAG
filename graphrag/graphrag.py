@@ -818,32 +818,32 @@ class GraphRAG:
             else:
                 chunks_section = "No relevant chunks found."
             # Implement for only_need_context    
-            if param.only_need_context:
-                if self.if_timeline_events:
-                    context = PROMPTS["dynamic_QA_raw_context"].format(
-                        events_data=events_section,
-                        chunks_data=chunks_section
-                    )
-                    logger.debug("Using dynamic_QA_raw_context prompt template with events and chunks")
-                else:
-                    context = PROMPTS["dynamic_QA_wo_timeline_raw_context"].format(
-                        chunks_data=chunks_section
-                    )
-                
+            #if param.only_need_context:
             if self.if_timeline_events:
-                context = PROMPTS["dynamic_QA"].format(
-                    question=question,
+                context = PROMPTS["dynamic_QA_raw_context"].format(
                     events_data=events_section,
                     chunks_data=chunks_section
                 )
-                logger.debug("Using dynamic_QA prompt template with events and chunks")
+                logger.debug("Using dynamic_QA_raw_context prompt template with events and chunks")
             else:
-                # Ablation study: exclude timeline events - use dynamic_QA_wo_timeline prompt
-                context = PROMPTS["dynamic_QA_wo_timeline"].format(
-                    question=question,
+                context = PROMPTS["dynamic_QA_wo_timeline_raw_context"].format(
                     chunks_data=chunks_section
                 )
-                logger.debug("Using dynamic_QA_wo_timeline prompt template with chunks only (ablation study)")
+                
+            # if self.if_timeline_events:
+            #     context = PROMPTS["dynamic_QA"].format(
+            #         question=question,
+            #         events_data=events_section,
+            #         chunks_data=chunks_section
+            #     )
+            #     logger.debug("Using dynamic_QA prompt template with events and chunks")
+            # else:
+            #     # Ablation study: exclude timeline events - use dynamic_QA_wo_timeline prompt
+            #     context = PROMPTS["dynamic_QA_wo_timeline"].format(
+            #         question=question,
+            #         chunks_data=chunks_section
+            #     )
+            #     logger.debug("Using dynamic_QA_wo_timeline prompt template with chunks only (ablation study)")
         except Exception as e:
             logger.error(f"Error retrieving chunks: {e}")
             # Fall back to original method if chunk retrieval fails
@@ -862,11 +862,11 @@ class GraphRAG:
             )
             
         # Implement for only_need_context
-        if param.only_need_context:
-            return context
-        else:
-            response = await self.best_model_func(context)
-            return response
+        # if param.only_need_context:
+        return context
+        # else:
+        #     response = await self.best_model_func(context)
+        #     return response
 
     async def ainsert(self, string_or_strings):
         await self._insert_start()
